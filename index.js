@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Ruta para firmar el manifest.json
 app.post('/api/sign', upload.single('manifest'), (req, res) => {
   // Ruta a los certificados (debes asegurar estos certificados en tu entorno de servidor)
-  const certPath = path.join(__dirname, 'certificates', 'Certificate.p12'); // Certificado de pase
+  const certPath = path.join(__dirname, 'certificates', 'certificado.p12'); // Certificado de pase
   const wwdrPath = path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'); // Certificado WWDR
   
   // Guardar el manifest.json recibido
