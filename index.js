@@ -38,7 +38,7 @@ app.post('/api/sign', upload.single('manifest'), (req, res) => {
     '-outform',
     'DER',
     '-passin',
-    'pass:PASSWORD', // Reemplaza PASSWORD con la contraseña de tu .p12
+    'pass:52159514', // Reemplaza PASSWORD con la contraseña de tu .p12
   ];
 
   // Ejecuta el comando OpenSSL
