@@ -9,10 +9,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Ruta para firmar el manifest.json
 app.post('/api/sign', upload.single('manifest'), (req, res) => {
-  // Ruta a los certificados (asegúrate de tener los certificados necesarios en tu entorno de servidor)
+  // Rutas a los certificados
   const certPath = path.join(__dirname, 'certificates', 'certificado.p12'); // Certificado de pase en formato .p12
   const wwdrPath = path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'); // Certificado WWDR
-  
+
   try {
     // Leer el manifest recibido desde la solicitud
     const manifestBuffer = req.file.buffer;
@@ -40,12 +40,19 @@ app.post('/api/sign', upload.single('manifest'), (req, res) => {
       return res.status(500).send('Error al extraer el certificado o la clave privada.');
     }
 
+    // Leer el certificado WWDR
+    const wwdrPem = fs.readFileSync(wwdrPath, 'utf8');
+    const wwdrCert = forge.pki.certificateFromPem(wwdrPem);
+
     // Crear un contenedor PKCS#7 y añadir el manifest
     const p7 = forge.pkcs7.createSignedData();
     p7.content = forge.util.createBuffer(manifestBuffer.toString('binary'), 'binary');
 
-    // Añadir el certificado y el firmante
-    p7.addCertificate(cert);
+    // Añadir certificados al contenedor PKCS#7
+    p7.addCertificate(cert);       // Certificado de tu Pase
+    p7.addCertificate(wwdrCert);   // Certificado WWDR de Apple
+
+    // Añadir el firmante
     p7.addSigner({
       key: key,
       certificate: cert,
