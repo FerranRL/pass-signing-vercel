@@ -19,10 +19,12 @@ app.post('/api/sign', upload.single('manifest'), (req, res) => {
       return res.status(500).send('Certificados no encontrados');
     }
 
-    const manifestPath = path.join(__dirname, 'manifest.json');
+    // Guardar el manifest.json recibido en el directorio temporal
+    const manifestPath = path.join('/tmp', 'manifest.json'); // Cambiado a /tmp
     fs.writeFileSync(manifestPath, req.file.buffer);
-    
-    const signaturePath = path.join(__dirname, 'signature.sig');
+
+    // Ruta para guardar la firma
+    const signaturePath = path.join('/tmp', 'signature.sig'); // Cambiado a /tmp
     
     const command = [
       'smime',
