@@ -57,7 +57,6 @@ app.post('/api/sign', upload.single('manifest'), (req, res) => {
     console.error('Error inesperado:', error);
     res.status(500).send('Error inesperado en el servidor');
   }
-});
 
   // Ejecuta el comando OpenSSL
   openssl(command, (err) => {
