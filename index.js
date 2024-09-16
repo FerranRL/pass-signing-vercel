@@ -35,7 +35,7 @@ app.post('/api/sign', upload.single('manifest'), (req, res) => {
       '-out', signaturePath,
       '-outform', 'DER',
       '-passin', 'pass:52159514', // Cambia esta contraseña si es necesario
-      '-md', 'sha256',
+      //'-md', 'sha256',
     ];
 
     // Ejecuta el comando OpenSSL y captura cualquier error
