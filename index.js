@@ -9,38 +9,55 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Ruta para firmar el manifest.json
 app.post('/api/sign', upload.single('manifest'), (req, res) => {
-  // Ruta a los certificados (debes asegurar estos certificados en tu entorno de servidor)
-  const certPath = path.join(__dirname, 'certificates', 'certificado.p12'); // Certificado de pase
-  const wwdrPath = path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'); // Certificado WWDR
-  
-  // Guardar el manifest.json recibido
-  const manifestPath = path.join(__dirname, 'manifest.json');
-  fs.writeFileSync(manifestPath, req.file.buffer);
+  try {
+    const certPath = path.join(__dirname, 'certificates', 'certificado.p12'); // Certificado de pase
+    const wwdrPath = path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'); // Certificado WWDR
+    
+    // Verifica que los archivos existen antes de continuar
+    if (!fs.existsSync(certPath) || !fs.existsSync(wwdrPath)) {
+      console.error('Certificados no encontrados');
+      return res.status(500).send('Certificados no encontrados');
+    }
 
-  // Ruta para guardar la firma
-  const signaturePath = path.join(__dirname, 'signature.sig');
+    const manifestPath = path.join(__dirname, 'manifest.json');
+    fs.writeFileSync(manifestPath, req.file.buffer);
+    
+    const signaturePath = path.join(__dirname, 'signature.sig');
+    
+    const command = [
+      'smime',
+      '-binary',
+      '-sign',
+      '-certfile', wwdrPath,
+      '-signer', certPath,
+      '-inkey', certPath,
+      '-in', manifestPath,
+      '-out', signaturePath,
+      '-outform', 'DER',
+      '-passin', 'pass:52159514', // Cambia esta contraseña si es necesario
+      '-md', 'sha256',
+    ];
 
-  // Comando OpenSSL para firmar el manifest
-  const command = [
-    'smime',
-    '-binary',
-    '-sign',
-    '-certfile',
-    wwdrPath,
-    '-signer',
-    certPath,
-    '-inkey',
-    certPath,
-    '-in',
-    manifestPath,
-    '-out',
-    signaturePath,
-    '-outform',
-    'DER',
-    '-passin',
-    'pass:52159514', // Reemplaza PASSWORD con la contraseña de tu .p12
-    //'-md', 'sha256',
-  ];
+    // Ejecuta el comando OpenSSL y captura cualquier error
+    openssl(command, (err) => {
+      if (err) {
+        console.error('Error al firmar:', err);
+        return res.status(500).send('Error al firmar el manifest');
+      }
+      
+      // Verifica si la firma se generó correctamente antes de enviarla
+      if (!fs.existsSync(signaturePath)) {
+        console.error('La firma no fue generada correctamente');
+        return res.status(500).send('La firma no fue generada correctamente');
+      }
+
+      res.sendFile(signaturePath);
+    });
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    res.status(500).send('Error inesperado en el servidor');
+  }
+});
 
   // Ejecuta el comando OpenSSL
   openssl(command, (err) => {
